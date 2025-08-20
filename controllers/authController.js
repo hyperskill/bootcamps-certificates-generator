@@ -164,17 +164,40 @@ const logout = async (req, res) => {
       await supabase.auth.signOut();
     }
 
+    // Clear session data manually first
+    req.session.access_token = null;
+    req.session.refresh_token = null;
+    req.session.user = null;
+
     // Destroy session
     req.session.destroy((err) => {
       if (err) {
         console.error('Session destroy error:', err);
-        return res.status(500).json({ error: 'Logout failed' });
+        if (req.headers.accept?.includes('application/json')) {
+          return res.status(500).json({ error: 'Logout failed' });
+        } else {
+          return res.redirect('/auth/login?error=logout_failed');
+        }
       }
-      res.json({ message: 'Logout successful' });
+      
+      // Clear the session cookie
+      res.clearCookie('connect.sid');
+      
+      // Check if this is an API request or browser request
+      if (req.headers.accept?.includes('application/json')) {
+        res.json({ message: 'Logout successful' });
+      } else {
+        // Browser request - redirect to login with success message
+        res.redirect('/auth/login?message=logged_out');
+      }
     });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({ error: 'Logout failed' });
+    if (req.headers.accept?.includes('application/json')) {
+      res.status(500).json({ error: 'Logout failed' });
+    } else {
+      res.redirect('/auth/login?error=logout_failed');
+    }
   }
 };
 
@@ -229,6 +252,16 @@ const refreshToken = async (req, res) => {
 
 // Simple HTML forms for development/testing
 const getLoginForm = (req, res) => {
+  const message = req.query.message;
+  const error = req.query.error;
+  
+  let alertHtml = '';
+  if (message === 'logged_out') {
+    alertHtml = '<div class="success">✅ You have been successfully logged out.</div>';
+  } else if (error === 'logout_failed') {
+    alertHtml = '<div class="error">❌ Logout failed. Please try again.</div>';
+  }
+  
   res.send(`<!doctype html><meta charset="utf-8">
 <title>Login - Certificate Generator</title>
 <style>
@@ -241,8 +274,10 @@ const getLoginForm = (req, res) => {
   .links { text-align: center; margin-top: 20px; }
   .links a { color: #007bff; text-decoration: none; }
   .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
+  .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
 </style>
 <h2>Login to Certificate Generator</h2>
+${alertHtml}
 <form method="POST" action="/auth/login">
   <div class="form-group">
     <label>Email</label>

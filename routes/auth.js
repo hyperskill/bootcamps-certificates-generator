@@ -15,6 +15,7 @@ const { requireAuth } = require('../middleware/auth');
 router.post('/signup', signup);
 router.post('/login', login);
 router.post('/logout', logout);
+router.get('/logout', logout); // Add GET route for logout links
 router.post('/refresh', refreshToken);
 router.get('/profile', requireAuth, getProfileHandler);
 
