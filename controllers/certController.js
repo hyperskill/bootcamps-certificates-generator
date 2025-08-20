@@ -4,7 +4,7 @@ const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const puppeteer = require('puppeteer');
 const multer = require('multer');
-const { loadDB, saveDB } = require('../utils/database');
+const { saveCertificate } = require('../utils/supabaseDatabase');
 
 const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
@@ -181,22 +181,27 @@ const generateCertificate = async (req, res) => {
     // Clean up uploaded file
     fs.unlinkSync(uploadedFilePath);
 
-    // Save to database with new schema
-    const db = loadDB();
+    // Save to Supabase database
     const relativeFilePath = path.join(bootcampFolder, typeFolder, `${uid}.pdf`).replace(/\\/g, '/');
     const record = { 
       uid, 
+      user_id: req.user?.id || null, // Associate with user if authenticated
       bootcamp,
       format,
       type,
       description, 
-      originalFilename: req.file.originalname,
-      createdAt: new Date().toISOString(),
+      original_filename: req.file.originalname,
       file_url: `/certs/${relativeFilePath}`, 
       verify_url: `/verify/${uid}` 
     };
-    db.push(record);
-    saveDB(db);
+
+    try {
+      const savedRecord = await saveCertificate(record);
+      console.log('Certificate saved to Supabase:', savedRecord.uid);
+    } catch (dbError) {
+      console.error('Database save failed:', dbError);
+      // Continue with response even if DB save fails
+    }
 
     if (req.headers['content-type']?.includes('application/json')) {
       res.json({ 

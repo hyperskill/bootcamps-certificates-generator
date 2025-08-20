@@ -79,6 +79,142 @@ const getAdminForm = (_req, res) => {
 </form>`);
 };
 
+const getUserManagement = async (req, res) => {
+  try {
+    const { getAllUsers, getPendingUsersCount } = require('../utils/supabaseDatabase');
+    const status = req.query.status || null;
+    const users = await getAllUsers(status);
+    const pendingCount = await getPendingUsersCount();
+    
+    res.send(`<!doctype html><meta charset="utf-8">
+<title>User Management - Admin Panel</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 1200px; margin: 20px auto; padding: 20px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .stats { display: flex; gap: 20px; margin-bottom: 30px; }
+  .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; min-width: 120px; }
+  .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+  .filters { margin-bottom: 20px; }
+  .filters a { display: inline-block; margin-right: 15px; padding: 8px 16px; background: #e9ecef; text-decoration: none; border-radius: 4px; color: #333; }
+  .filters a.active { background: #007bff; color: white; }
+  .user-table { width: 100%; border-collapse: collapse; }
+  .user-table th, .user-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+  .user-table th { background: #f8f9fa; }
+  .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+  .status-pending { background: #fff3cd; color: #856404; }
+  .status-approved { background: #d4edda; color: #155724; }
+  .status-rejected { background: #f8d7da; color: #721c24; }
+  .status-suspended { background: #e2e3e5; color: #495057; }
+  .action-btn { padding: 6px 12px; margin: 2px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .btn-approve { background: #28a745; color: white; }
+  .btn-reject { background: #dc3545; color: white; }
+  .btn-suspend { background: #6c757d; color: white; }
+  .back-link { display: inline-block; margin-bottom: 20px; color: #007bff; text-decoration: none; }
+</style>
+<a href="/auth/dashboard" class="back-link">← Back to Dashboard</a>
+<div class="header">
+  <h1>User Management</h1>
+  <div>Admin Panel</div>
+</div>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-number">${users.filter(u => u.status === 'pending').length}</div>
+    <div>Pending</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${users.filter(u => u.status === 'approved').length}</div>
+    <div>Approved</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${users.filter(u => u.status === 'rejected').length}</div>
+    <div>Rejected</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${users.length}</div>
+    <div>Total</div>
+  </div>
+</div>
+
+<div class="filters">
+  <a href="/admin/users" ${!status ? 'class="active"' : ''}>All Users</a>
+  <a href="/admin/users?status=pending" ${status === 'pending' ? 'class="active"' : ''}>Pending (${users.filter(u => u.status === 'pending').length})</a>
+  <a href="/admin/users?status=approved" ${status === 'approved' ? 'class="active"' : ''}>Approved</a>
+  <a href="/admin/users?status=rejected" ${status === 'rejected' ? 'class="active"' : ''}>Rejected</a>
+  <a href="/admin/users?status=suspended" ${status === 'suspended' ? 'class="active"' : ''}>Suspended</a>
+</div>
+
+<table class="user-table">
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Email</th>
+      <th>Status</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${users.map(user => `
+      <tr>
+        <td>${user.full_name || 'No Name'}</td>
+        <td>${user.email}</td>
+        <td><span class="status-badge status-${user.status || 'pending'}">${(user.status || 'pending').toUpperCase()}</span></td>
+        <td>${new Date(user.created_at).toLocaleDateString()}</td>
+        <td>
+          ${user.status !== 'approved' ? `<button class="action-btn btn-approve" onclick="updateUser('${user.id}', 'approved')">Approve</button>` : ''}
+          ${user.status !== 'rejected' ? `<button class="action-btn btn-reject" onclick="updateUser('${user.id}', 'rejected')">Reject</button>` : ''}
+          ${user.status !== 'suspended' ? `<button class="action-btn btn-suspend" onclick="updateUser('${user.id}', 'suspended')">Suspend</button>` : ''}
+        </td>
+      </tr>
+    `).join('')}
+  </tbody>
+</table>
+
+<script>
+async function updateUser(userId, status) {
+  const reason = status === 'rejected' ? prompt('Reason for rejection (optional):') : null;
+  
+  try {
+    const response = await fetch('/admin/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, status, reason })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      location.reload();
+    } else {
+      alert('Error: ' + result.error);
+    }
+  } catch (error) {
+    alert('Error updating user status');
+  }
+}
+</script>`);
+  } catch (error) {
+    console.error('User management error:', error);
+    res.status(500).send('Error loading user management');
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const { updateUserStatus } = require('../utils/supabaseDatabase');
+    const { userId, status, reason, notes } = req.body;
+    
+    await updateUserStatus(userId, status, req.user.id, reason, notes);
+    
+    res.json({ success: true, message: `User ${status} successfully` });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = {
-  getAdminForm
+  getAdminForm,
+  getUserManagement,
+  updateUser
 };

@@ -1,24 +1,24 @@
-const { loadDB } = require('../utils/database');
+const { getCertificateByUid } = require('../utils/supabaseDatabase');
 const { escapeHtml } = require('../utils/helpers');
 
-const verifyCertificate = (req, res) => {
-  const db = loadDB();
-  const rec = db.find(r => r.uid === req.params.uid);
+const verifyCertificate = async (req, res) => {
+  try {
+    const rec = await getCertificateByUid(req.params.uid);
   
-  if (!rec) {
-    return res.status(404).send(`
-      <!doctype html><meta charset="utf-8">
-      <title>Certificate Not Found</title>
-      <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
-        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
-      </style>
-      <div class="error">
-        <h1>❌ Certificate Not Found</h1>
-        <p>The certificate with this ID could not be found or may have been removed.</p>
-      </div>
-    `);
-  }
+    if (!rec) {
+      return res.status(404).send(`
+        <!doctype html><meta charset="utf-8">
+        <title>Certificate Not Found</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
+          .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+        </style>
+        <div class="error">
+          <h1>❌ Certificate Not Found</h1>
+          <p>The certificate with this ID could not be found or may have been removed.</p>
+        </div>
+      `);
+    }
   
   res.send(`<!doctype html><meta charset="utf-8">
 <title>Certificate Verification</title>
@@ -57,11 +57,11 @@ const verifyCertificate = (req, res) => {
   </div>
   <div class="detail-row">
     <span class="label">Original Filename:</span> 
-    <span class="value">${escapeHtml(rec.originalFilename || 'N/A')}</span>
+    <span class="value">${escapeHtml(rec.original_filename || 'N/A')}</span>
   </div>
   <div class="detail-row">
     <span class="label">Created:</span> 
-    <span class="value">${rec.createdAt ? new Date(rec.createdAt).toLocaleString() : 'N/A'}</span>
+    <span class="value">${rec.created_at ? new Date(rec.created_at).toLocaleString() : 'N/A'}</span>
   </div>
   <div class="detail-row">
     <span class="label">Certificate ID:</span> 
@@ -71,6 +71,21 @@ const verifyCertificate = (req, res) => {
 <div class="actions">
   <a href="${rec.file_url}" target="_blank">📄 View Certificate</a>
 </div>`);
+  } catch (error) {
+    console.error('Verification error:', error);
+    res.status(500).send(`
+      <!doctype html><meta charset="utf-8">
+      <title>Verification Error</title>
+      <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
+        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+      </style>
+      <div class="error">
+        <h1>❌ Verification Error</h1>
+        <p>There was an error verifying this certificate. Please try again later.</p>
+      </div>
+    `);
+  }
 };
 
 module.exports = {
