@@ -40,6 +40,18 @@ const verifyCertificate = (req, res) => {
 </div>
 <div class="details">
   <div class="detail-row">
+    <span class="label">Bootcamp:</span> 
+    <span class="value">${escapeHtml(rec.bootcamp || 'N/A')}</span>
+  </div>
+  <div class="detail-row">
+    <span class="label">Format:</span> 
+    <span class="value">${escapeHtml(rec.format || 'N/A')}</span>
+  </div>
+  <div class="detail-row">
+    <span class="label">Type:</span> 
+    <span class="value">${escapeHtml(rec.type || 'N/A')}</span>
+  </div>
+  <div class="detail-row">
     <span class="label">Description:</span> 
     <span class="value">${escapeHtml(rec.description || 'N/A')}</span>
   </div>
