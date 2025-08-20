@@ -9,14 +9,29 @@ const requireAuth = async (req, res, next) => {
       : req.session?.access_token;
     
     if (!token) {
-      return res.status(401).json({ error: 'Authentication required' });
+      if (req.headers.accept?.includes('application/json')) {
+        return res.status(401).json({ error: 'Authentication required' });
+      } else {
+        return res.redirect('/auth/login?error=unauthorized');
+      }
     }
 
     // Verify token with Supabase
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
     
     if (error || !user) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
+      // Clear invalid session
+      if (req.session) {
+        req.session.access_token = null;
+        req.session.refresh_token = null;
+        req.session.user = null;
+      }
+      
+      if (req.headers.accept?.includes('application/json')) {
+        return res.status(401).json({ error: 'Invalid or expired token' });
+      } else {
+        return res.redirect('/auth/login?error=unauthorized');
+      }
     }
 
     // Add user to request object
@@ -25,14 +40,22 @@ const requireAuth = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
-    res.status(401).json({ error: 'Authentication failed' });
+    if (req.headers.accept?.includes('application/json')) {
+      res.status(401).json({ error: 'Authentication failed' });
+    } else {
+      res.redirect('/auth/login?error=unauthorized');
+    }
   }
 };
 
 const requireAdmin = async (req, res, next) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      if (req.headers.accept?.includes('application/json')) {
+        return res.status(401).json({ error: 'Authentication required' });
+      } else {
+        return res.redirect('/auth/login?error=unauthorized');
+      }
     }
 
     // Check if user has admin role in profiles table
@@ -44,17 +67,29 @@ const requireAdmin = async (req, res, next) => {
 
     if (error) {
       console.error('Admin check error:', error);
-      return res.status(403).json({ error: 'Authorization check failed' });
+      if (req.headers.accept?.includes('application/json')) {
+        return res.status(403).json({ error: 'Authorization check failed' });
+      } else {
+        return res.redirect('/auth/dashboard?error=admin_required');
+      }
     }
 
     if (profile?.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
+      if (req.headers.accept?.includes('application/json')) {
+        return res.status(403).json({ error: 'Admin access required' });
+      } else {
+        return res.redirect('/auth/dashboard?error=admin_required');
+      }
     }
 
     next();
   } catch (error) {
     console.error('Admin middleware error:', error);
-    res.status(403).json({ error: 'Authorization failed' });
+    if (req.headers.accept?.includes('application/json')) {
+      res.status(403).json({ error: 'Authorization failed' });
+    } else {
+      res.redirect('/auth/dashboard?error=admin_required');
+    }
   }
 };
 

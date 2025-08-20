@@ -30,6 +30,13 @@ router.get('/dashboard', requireAuth, async (req, res) => {
     const certificates = await getCertificatesByUser(req.user.id);
     const profile = await getProfile(req.user.id);
     
+    // Handle error messages
+    const error = req.query.error;
+    let alertHtml = '';
+    if (error === 'admin_required') {
+      alertHtml = '<div class="error" style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px;">🔒 Admin access required to view that page.</div>';
+    }
+    
     res.send(`<!doctype html><meta charset="utf-8">
 <title>Dashboard - Certificate Generator</title>
 <style>
@@ -46,6 +53,7 @@ router.get('/dashboard', requireAuth, async (req, res) => {
   .btn:hover { background: #0056b3; }
   .btn-secondary { background: #6c757d; }
   .btn-secondary:hover { background: #545b62; }
+  .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
 </style>
 <div class="header">
   <h1>Certificate Dashboard</h1>
@@ -54,6 +62,7 @@ router.get('/dashboard', requireAuth, async (req, res) => {
     <a href="/auth/logout" style="margin-left: 15px; color: #dc3545;">Logout</a>
   </div>
 </div>
+${alertHtml}
 
 <div style="margin-bottom: 30px;">
   <a href="/admin" class="btn">Generate New Certificate</a>

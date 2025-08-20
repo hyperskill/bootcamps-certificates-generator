@@ -58,17 +58,27 @@ const signup = async (req, res) => {
       }
     }
 
-    res.json({ 
-      message: 'Account created successfully! Your account is pending approval. You will be able to login once an administrator approves your account.', 
-      user: {
-        id: authData.user.id,
-        email: authData.user.email
-      },
-      status: 'pending'
-    });
+    // Check if this is an API request or browser request
+    if (req.headers.accept?.includes('application/json')) {
+      res.json({ 
+        message: 'Account created successfully! Your account is pending approval. You will be able to login once an administrator approves your account.', 
+        user: {
+          id: authData.user.id,
+          email: authData.user.email
+        },
+        status: 'pending'
+      });
+    } else {
+      // Browser request - redirect to login with success message
+      res.redirect('/auth/login?message=signup_success');
+    }
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ error: 'Signup failed' });
+    if (req.headers.accept?.includes('application/json')) {
+      res.status(500).json({ error: 'Signup failed' });
+    } else {
+      res.redirect('/auth/signup?error=signup_failed');
+    }
   }
 };
 
@@ -142,18 +152,28 @@ const login = async (req, res) => {
     req.session.refresh_token = data.session.refresh_token;
     req.session.user = data.user;
 
-    res.json({ 
-      message: 'Login successful', 
-      user: data.user,
-      profile: profile,
-      session: {
-        access_token: data.session.access_token,
-        expires_at: data.session.expires_at
-      }
-    });
+    // Check if this is an API request or browser request
+    if (req.headers.accept?.includes('application/json')) {
+      res.json({ 
+        message: 'Login successful', 
+        user: data.user,
+        profile: profile,
+        session: {
+          access_token: data.session.access_token,
+          expires_at: data.session.expires_at
+        }
+      });
+    } else {
+      // Browser request - redirect to dashboard
+      res.redirect('/auth/dashboard');
+    }
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    if (req.headers.accept?.includes('application/json')) {
+      res.status(500).json({ error: 'Login failed' });
+    } else {
+      res.redirect('/auth/login?error=login_failed');
+    }
   }
 };
 
@@ -256,10 +276,21 @@ const getLoginForm = (req, res) => {
   const error = req.query.error;
   
   let alertHtml = '';
+  
+  // Success messages
   if (message === 'logged_out') {
     alertHtml = '<div class="success">✅ You have been successfully logged out.</div>';
-  } else if (error === 'logout_failed') {
+  } else if (message === 'signup_success') {
+    alertHtml = '<div class="success">✅ Account created successfully! Your account is pending approval. You will be able to login once an administrator approves your account.</div>';
+  }
+  
+  // Error messages
+  else if (error === 'logout_failed') {
     alertHtml = '<div class="error">❌ Logout failed. Please try again.</div>';
+  } else if (error === 'login_failed') {
+    alertHtml = '<div class="error">❌ Login failed. Please check your credentials and try again.</div>';
+  } else if (error === 'unauthorized') {
+    alertHtml = '<div class="error">🔒 You need to login to access that page.</div>';
   }
   
   res.send(`<!doctype html><meta charset="utf-8">
@@ -295,6 +326,13 @@ ${alertHtml}
 };
 
 const getSignupForm = (req, res) => {
+  const error = req.query.error;
+  
+  let alertHtml = '';
+  if (error === 'signup_failed') {
+    alertHtml = '<div class="error">❌ Signup failed. Please try again or contact support.</div>';
+  }
+  
   res.send(`<!doctype html><meta charset="utf-8">
 <title>Sign Up - Certificate Generator</title>
 <style>
@@ -306,8 +344,10 @@ const getSignupForm = (req, res) => {
   button:hover { background: #0056b3; }
   .links { text-align: center; margin-top: 20px; }
   .links a { color: #007bff; text-decoration: none; }
+  .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
 </style>
 <h2>Sign Up for Certificate Generator</h2>
+${alertHtml}
 <form method="POST" action="/auth/signup">
   <div class="form-group">
     <label>Full Name</label>
