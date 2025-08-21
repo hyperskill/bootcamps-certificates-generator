@@ -52,8 +52,8 @@ const verifyCertificate = async (req, res) => {
     <span class="value">${escapeHtml(rec.type || 'N/A')}</span>
   </div>
   <div class="detail-row">
-    <span class="label">Description:</span> 
-    <span class="value">${escapeHtml(rec.description || 'N/A')}</span>
+    <span class="label">Student Name:</span> 
+    <span class="value">${escapeHtml(rec.student_name || 'N/A')}</span>
   </div>
   <div class="detail-row">
     <span class="label">Original Filename:</span> 

@@ -54,11 +54,11 @@ const generateCertificate = async (req, res) => {
     }
 
     // Extract form data
-    const { bootcamp, format, type, description = '' } = req.body;
+    const { bootcamp, format, type, studentName } = req.body;
     
     // Validate required fields
-    if (!bootcamp || !format || !type) {
-      return res.status(400).json({ error: 'Bootcamp name, format, and type are required' });
+    if (!bootcamp || !format || !type || !studentName) {
+      return res.status(400).json({ error: 'Bootcamp name, student name, format, and type are required' });
     }
 
     // Validate format and type values
@@ -189,7 +189,7 @@ const generateCertificate = async (req, res) => {
       bootcamp,
       format,
       type,
-      description, 
+      student_name: studentName, 
       original_filename: req.file.originalname,
       file_url: `/certs/${relativeFilePath}`, 
       verify_url: `/verify/${uid}` 

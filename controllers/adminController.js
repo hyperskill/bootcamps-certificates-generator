@@ -33,6 +33,11 @@ const getAdminForm = (_req, res) => {
     </div>
     
     <div class="form-group">
+      <label>Student Name</label>
+      <input type="text" name="studentName" placeholder="Student's full name" required>
+    </div>
+    
+    <div class="form-group">
       <label>Certificate Format</label>
       <div class="radio-group">
         <div class="radio-option">
@@ -67,11 +72,6 @@ const getAdminForm = (_req, res) => {
     <div class="form-group">
       <label>Certificate File (PNG, JPG, PDF)</label>
       <input type="file" name="certificate" accept=".png,.jpg,.jpeg,.pdf" required>
-    </div>
-    
-    <div class="form-group">
-      <label>Description (optional)</label>
-      <input type="text" name="description" placeholder="Additional description">
     </div>
   </div>
   

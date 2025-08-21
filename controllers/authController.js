@@ -223,16 +223,152 @@ const logout = async (req, res) => {
 
 const getProfileHandler = async (req, res) => {
   try {
+    const { getProfile, getCertificatesByUser } = require('../utils/supabaseDatabase');
     const profile = await getProfile(req.user.id);
+    const certificates = await getCertificatesByUser(req.user.id);
 
     if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
+      return res.status(404).send(`
+        <!doctype html><meta charset="utf-8">
+        <title>Profile Not Found</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
+          .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+        </style>
+        <div class="error">
+          <h1>❌ Profile Not Found</h1>
+          <p>We couldn't find your profile. Please contact support.</p>
+          <a href="/auth/dashboard">← Back to Dashboard</a>
+        </div>
+      `);
     }
 
-    res.json({ profile });
+    // Get user statistics
+    const totalCerts = certificates.length;
+    const completionCerts = certificates.filter(c => c.type === 'completion').length;
+    const participationCerts = certificates.filter(c => c.type === 'participation').length;
+    const recentCerts = certificates.slice(0, 3); // Last 3 certificates
+
+    res.send(`<!doctype html><meta charset="utf-8">
+<title>My Profile - Certificate Generator</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .back-link { color: #007bff; text-decoration: none; font-weight: bold; }
+  .back-link:hover { text-decoration: underline; }
+  .profile-card { background: #f8f9fa; border-radius: 12px; padding: 30px; margin-bottom: 30px; }
+  .profile-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+  .avatar { width: 80px; height: 80px; background: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: bold; }
+  .profile-info h1 { margin: 0; color: #333; }
+  .profile-info p { margin: 5px 0; color: #666; }
+  .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+  .status-approved { background: #d4edda; color: #155724; }
+  .status-pending { background: #fff3cd; color: #856404; }
+  .status-rejected { background: #f8d7da; color: #721c24; }
+  .status-suspended { background: #e2e3e5; color: #495057; }
+  .role-badge { background: #17a2b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-bottom: 30px; }
+  .stat-card { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; text-align: center; }
+  .stat-number { font-size: 24px; font-weight: bold; color: #007bff; margin-bottom: 5px; }
+  .stat-label { color: #666; font-size: 14px; }
+  .section { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 25px; margin-bottom: 20px; }
+  .section h3 { margin-top: 0; color: #495057; border-bottom: 2px solid #e9ecef; padding-bottom: 10px; }
+  .cert-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+  .cert-item:last-child { border-bottom: none; }
+  .cert-info { flex: 1; }
+  .cert-title { font-weight: bold; color: #333; margin-bottom: 4px; }
+  .cert-meta { font-size: 12px; color: #666; }
+  .cert-actions a { color: #007bff; text-decoration: none; margin-left: 10px; font-size: 12px; }
+  .cert-actions a:hover { text-decoration: underline; }
+  .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 6px; margin-right: 10px; }
+  .btn:hover { background: #0056b3; }
+  .btn-secondary { background: #6c757d; }
+  .btn-secondary:hover { background: #545b62; }
+  .empty-state { text-align: center; color: #666; padding: 40px; }
+</style>
+
+<div class="header">
+  <a href="/auth/dashboard" class="back-link">← Back to Dashboard</a>
+  <div>
+    <a href="/auth/logout" class="btn btn-secondary">Logout</a>
+  </div>
+</div>
+
+<div class="profile-card">
+  <div class="profile-header">
+    <div class="avatar">${(profile.full_name || profile.email || 'U').charAt(0).toUpperCase()}</div>
+    <div class="profile-info">
+      <h1>${profile.full_name || 'No Name Set'}</h1>
+      <p><strong>Email:</strong> ${profile.email}</p>
+      <p>
+        <strong>Status:</strong> 
+        <span class="status-badge status-${profile.status || 'pending'}">${(profile.status || 'pending').toUpperCase()}</span>
+        ${profile.role === 'admin' ? '<span class="role-badge">ADMIN</span>' : ''}
+      </p>
+      <p><strong>Member since:</strong> ${new Date(profile.created_at).toLocaleDateString()}</p>
+    </div>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-number">${totalCerts}</div>
+    <div class="stat-label">Total Certificates</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${completionCerts}</div>
+    <div class="stat-label">Completion</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${participationCerts}</div>
+    <div class="stat-label">Participation</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Recent Certificates</h3>
+  ${recentCerts.length > 0 ? recentCerts.map(cert => `
+    <div class="cert-item">
+      <div class="cert-info">
+        <div class="cert-title">${cert.bootcamp} (${cert.type})</div>
+        <div class="cert-meta">
+          Student: ${cert.student_name || 'N/A'} • 
+          Format: ${cert.format} • 
+          Created: ${new Date(cert.created_at).toLocaleDateString()}
+        </div>
+      </div>
+      <div class="cert-actions">
+        <a href="${cert.file_url}" target="_blank">View PDF</a>
+        <a href="${cert.verify_url}" target="_blank">Verify</a>
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state">No certificates yet</div>'}
+  
+  ${certificates.length > 3 ? `<div style="text-align: center; margin-top: 20px;"><a href="/auth/dashboard" class="btn">View All Certificates</a></div>` : ''}
+</div>
+
+<div class="section">
+  <h3>Quick Actions</h3>
+  <a href="/admin" class="btn">Generate New Certificate</a>
+  <a href="/auth/dashboard" class="btn btn-secondary">View Dashboard</a>
+  ${profile.role === 'admin' ? '<a href="/admin/users" class="btn" style="background: #fd7e14;">👥 Manage Users</a>' : ''}
+</div>
+`);
   } catch (error) {
     console.error('Get profile error:', error);
-    res.status(500).json({ error: 'Failed to get profile' });
+    res.status(500).send(`
+      <!doctype html><meta charset="utf-8">
+      <title>Profile Error</title>
+      <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
+        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+      </style>
+      <div class="error">
+        <h1>❌ Profile Error</h1>
+        <p>There was an error loading your profile. Please try again later.</p>
+        <a href="/auth/dashboard">← Back to Dashboard</a>
+      </div>
+    `);
   }
 };
 
