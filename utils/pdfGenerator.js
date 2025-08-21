@@ -38,7 +38,7 @@ class CertificateGenerator {
         .png()
         .toBuffer();
 
-      // Create a white background with QR code and text using Sharp
+      // Create a white background with QR code using Sharp
       const overlayWidth = 200;
       const overlayHeight = 120;
       
@@ -74,7 +74,7 @@ class CertificateGenerator {
     }
   }
 
-  async processImageToPdf(inputBuffer, format = 'landscape') {
+  async processImageToPdf(inputBuffer, inputMimeType, format = 'landscape') {
     try {
       const pdfDoc = await PDFDocument.create();
       
@@ -88,16 +88,34 @@ class CertificateGenerator {
       const maxWidth = pageWidth - 40; // 20pt margin on each side
       const maxHeight = pageHeight - 40;
       
-      const processedImageBuffer = await sharp(inputBuffer)
-        .resize(Math.floor(maxWidth), Math.floor(maxHeight), {
-          fit: 'inside',
-          withoutEnlargement: false
-        })
-        .png()
-        .toBuffer();
+      // Determine the best output format for PDF-lib
+      let processedImageBuffer;
+      let embedFunction;
+      
+      if (inputMimeType.includes('jpeg') || inputMimeType.includes('jpg')) {
+        // Keep as JPEG for better compression
+        processedImageBuffer = await sharp(inputBuffer)
+          .resize(Math.floor(maxWidth), Math.floor(maxHeight), {
+            fit: 'inside',
+            withoutEnlargement: false
+          })
+          .jpeg({ quality: 90 })
+          .toBuffer();
+        embedFunction = pdfDoc.embedJpg.bind(pdfDoc);
+      } else {
+        // Convert to PNG for transparency support
+        processedImageBuffer = await sharp(inputBuffer)
+          .resize(Math.floor(maxWidth), Math.floor(maxHeight), {
+            fit: 'inside',
+            withoutEnlargement: false
+          })
+          .png()
+          .toBuffer();
+        embedFunction = pdfDoc.embedPng.bind(pdfDoc);
+      }
 
       // Embed image in PDF
-      const image = await pdfDoc.embedPng(processedImageBuffer);
+      const image = await embedFunction(processedImageBuffer);
       const imageDims = image.scale(1);
 
       // Center the image on the page
@@ -191,7 +209,7 @@ class CertificateGenerator {
         console.log('📄 Loaded existing PDF');
       } else {
         // Convert image to PDF
-        pdfDoc = await this.processImageToPdf(inputBuffer, format);
+        pdfDoc = await this.processImageToPdf(inputBuffer, inputFile.mimetype, format);
         console.log('🖼️ Converted image to PDF');
       }
 
