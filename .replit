@@ -1,11 +1,8 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-20"]
 
 [deployment]
-run = ["sh", "-c", "npm start"]
+run = ["npm", "start"]
 
 [[ports]]
 localPort = 3000
 externalPort = 80
-
-[env]
-PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"

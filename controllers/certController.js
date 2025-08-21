@@ -1,10 +1,9 @@
 const path = require('path');
 const fs = require('fs');
-const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
-const { launchBrowser } = require('../utils/puppeteerConfig');
 const multer = require('multer');
 const { saveCertificate } = require('../utils/supabaseDatabase');
+const CertificateGenerator = require('../utils/pdfGenerator');
 
 const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
@@ -48,17 +47,28 @@ const upload = multer({
 
 const generateCertificate = async (req, res) => {
   try {
+    console.log('📥 Certificate generation request received');
+    
     // Check if file was uploaded
     if (!req.file) {
       return res.status(400).json({ error: 'Certificate file is required' });
     }
 
-    // Extract form data
-    const { bootcamp, format, type, studentName } = req.body;
+    // Check authentication
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    // Extract form data - updated field name
+    const { bootcamp, format, type, student_name } = req.body;
+    
+    console.log('📋 Form data received:', { bootcamp, format, type, student_name });
     
     // Validate required fields
-    if (!bootcamp || !format || !type || !studentName) {
-      return res.status(400).json({ error: 'Bootcamp name, student name, format, and type are required' });
+    if (!bootcamp || !format || !type || !student_name) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: bootcamp, format, type, student_name' 
+      });
     }
 
     // Validate format and type values
@@ -69,9 +79,13 @@ const generateCertificate = async (req, res) => {
     if (!['completion', 'participation'].includes(type)) {
       return res.status(400).json({ error: 'Type must be completion or participation' });
     }
+
+    // Generate unique identifiers
     const uid = uuidv4();
     const verifyUrl = `${BASE_URL}/verify/${uid}`;
-    const qrDataUrl = await QRCode.toDataURL(verifyUrl);
+    
+    console.log(`🎯 Generating certificate for ${student_name} - ${bootcamp}`);
+    console.log(`🔗 Verification URL: ${verifyUrl}`);
 
     // Create folder structure based on bootcamp and type
     const bootcampFolder = toSnakeCase(bootcamp);
@@ -81,115 +95,35 @@ const generateCertificate = async (req, res) => {
     
     // Create directories if they don't exist
     fs.mkdirSync(absoluteFolderPath, { recursive: true });
+    console.log(`📁 Created directory: ${absoluteFolderPath}`);
 
-    // Convert uploaded file to base64 for embedding
-    const uploadedFilePath = req.file.path;
-    const fileBuffer = fs.readFileSync(uploadedFilePath);
-    const fileBase64 = fileBuffer.toString('base64');
-    const fileMimeType = req.file.mimetype;
-    const fileDataUri = `data:${fileMimeType};base64,${fileBase64}`;
+    // Generate certificate using new PDF generator
+    console.log('🎨 Initializing PDF generator...');
+    const generator = new CertificateGenerator();
+    const pdfBuffer = await generator.generateCertificate(req.file, uid, verifyUrl, format);
 
-    // Determine dimensions based on format
-    let pageWidth, pageHeight, qrPosition;
-    if (format === 'portrait') {
-      pageWidth = 794;   // A4 portrait width
-      pageHeight = 1123; // A4 portrait height
-      qrPosition = {
-        bottom: '60px',
-        right: '50px'
-      };
-    } else {
-      pageWidth = 1123;  // A4 landscape width
-      pageHeight = 794;  // A4 landscape height
-      qrPosition = {
-        bottom: '60px',
-        right: '80px'
-      };
-    }
-
-    const html = `
-<!doctype html>
-<html><head><meta charset="utf-8"/>
-<style>
-  @page { size: A4 ${format}; margin: 0; }
-  html, body { margin:0; padding:0; width:100%; height:100%; overflow: hidden; }
-  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .page {
-    position: relative;
-    width: ${pageWidth}px;
-    height: ${pageHeight}px;
-    ${fileMimeType === 'application/pdf' ? 
-      `background: white;` : 
-      `background: url('${fileDataUri}') no-repeat center center / contain;`
-    }
-  }
-  .overlay {
-    position: absolute;
-    bottom: ${qrPosition.bottom};
-    right: ${qrPosition.right};
-    padding: 12px;
-    text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
-  }
-  .qr-code {
-    width: 96px;
-    height: 96px;
-    background: url('${qrDataUrl}') no-repeat center / contain;
-    margin: 0 auto 8px auto;
-  }
-  .uid {
-    font-size: 8px;
-    color: white;
-    font-weight: bold;
-    letter-spacing: 0.4px;
-  }
-  ${fileMimeType === 'application/pdf' ? `
-  .pdf-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('${fileDataUri}') no-repeat center center / contain;
-  }` : ''}
-</style></head>
-<body>
-  <div class="page">
-    ${fileMimeType === 'application/pdf' ? '<div class="pdf-bg"></div>' : ''}
-    <div class="overlay">
-      <div class="qr-code"></div>
-      <div class="uid">${uid}</div>
-    </div>
-  </div>
-</body></html>`;
-
-    const browser = await launchBrowser();
-    const page = await browser.newPage();
-    await page.setViewport({ width: pageWidth, height: pageHeight, deviceScaleFactor: 2 });
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-
+    // Save PDF file
     const outPath = path.join(absoluteFolderPath, `${uid}.pdf`);
-    await page.pdf({ 
-      path: outPath, 
-      format: 'A4', 
-      landscape: format === 'landscape', 
-      printBackground: true, 
-      preferCSSPageSize: true 
-    });
-    await browser.close();
+    fs.writeFileSync(outPath, pdfBuffer);
+    console.log(`💾 Certificate saved to: ${outPath}`);
 
     // Clean up uploaded file
-    fs.unlinkSync(uploadedFilePath);
+    try {
+      fs.unlinkSync(req.file.path);
+      console.log('🧹 Temporary upload file cleaned up');
+    } catch (cleanupError) {
+      console.warn('⚠️ Could not delete temporary file:', cleanupError.message);
+    }
 
     // Save to Supabase database
     const relativeFilePath = path.join(bootcampFolder, typeFolder, `${uid}.pdf`).replace(/\\/g, '/');
     const record = { 
       uid, 
-      user_id: req.user?.id || null, // Associate with user if authenticated
+      user_id: req.user.id,
       bootcamp,
       format,
       type,
-      student_name: studentName, 
+      student_name, 
       original_filename: req.file.originalname,
       file_url: `/certs/${relativeFilePath}`, 
       verify_url: `/verify/${uid}` 
@@ -203,6 +137,7 @@ const generateCertificate = async (req, res) => {
       // Continue with response even if DB save fails
     }
 
+    // Return response
     if (req.headers['content-type']?.includes('application/json')) {
       res.json({ 
         ok: true, 
@@ -225,6 +160,7 @@ const generateCertificate = async (req, res) => {
         <div class="success">
           <h2>✅ Certificate Generated Successfully!</h2>
           <p>Your ${format} ${type} certificate for <strong>${bootcamp}</strong> has been processed and QR code added.</p>
+          <p><strong>Student:</strong> ${student_name}</p>
           <p><strong>Certificate ID:</strong> ${uid}</p>
           <p><strong>Stored in:</strong> ${bootcampFolder}/${typeFolder}/</p>
         </div>
@@ -237,15 +173,23 @@ const generateCertificate = async (req, res) => {
         </div>
       `);
     }
-  } catch (e) {
-    console.error(e);
+
+  } catch (error) {
+    console.error('❌ Certificate generation error:', error);
     
     // Clean up uploaded file in case of error
     if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+      try {
+        fs.unlinkSync(req.file.path);
+        console.log('🧹 Cleaned up temporary file after error');
+      } catch (cleanupError) {
+        console.warn('⚠️ Could not delete temporary file after error:', cleanupError.message);
+      }
     }
     
-    res.status(500).json({ error: 'Failed to generate certificate: ' + e.message });
+    res.status(500).json({ 
+      error: `Failed to generate certificate: ${error.message}` 
+    });
   }
 };
 
