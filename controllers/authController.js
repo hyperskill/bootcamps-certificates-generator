@@ -247,7 +247,6 @@ const getProfileHandler = async (req, res) => {
     const totalCerts = certificates.length;
     const completionCerts = certificates.filter(c => c.type === 'completion').length;
     const participationCerts = certificates.filter(c => c.type === 'participation').length;
-    const recentCerts = certificates.slice(0, 3); // Last 3 certificates
 
     res.send(`<!doctype html><meta charset="utf-8">
 <title>My Profile - Certificate Generator</title>
@@ -273,12 +272,18 @@ const getProfileHandler = async (req, res) => {
   .stat-label { color: #666; font-size: 14px; }
   .section { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 25px; margin-bottom: 20px; }
   .section h3 { margin-top: 0; color: #495057; border-bottom: 2px solid #e9ecef; padding-bottom: 10px; }
-  .cert-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
-  .cert-item:last-child { border-bottom: none; }
-  .cert-info { flex: 1; }
-  .cert-title { font-weight: bold; color: #333; margin-bottom: 4px; }
-  .cert-meta { font-size: 12px; color: #666; }
-  .cert-actions a { color: #007bff; text-decoration: none; margin-left: 10px; font-size: 12px; }
+  .bootcamp-group { margin-bottom: 30px; }
+  .bootcamp-title { color: #007bff; font-size: 18px; font-weight: bold; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #e9ecef; }
+  .cert-table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; }
+  .cert-table th { background: #f8f9fa; padding: 10px 12px; text-align: left; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6; font-size: 14px; }
+  .cert-table td { padding: 10px 12px; border-bottom: 1px solid #f1f3f4; }
+  .cert-table tr:last-child td { border-bottom: none; }
+  .cert-table tr:hover { background: #f8f9fa; }
+  .student-name { font-weight: 600; color: #333; }
+  .cert-type { padding: 3px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+  .type-completion { background: #d4edda; color: #155724; }
+  .type-participation { background: #cce8ff; color: #004085; }
+  .cert-actions a { color: #007bff; text-decoration: none; margin-right: 8px; font-size: 12px; }
   .cert-actions a:hover { text-decoration: underline; }
   .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 6px; margin-right: 10px; }
   .btn:hover { background: #0056b3; }
@@ -326,25 +331,49 @@ const getProfileHandler = async (req, res) => {
 </div>
 
 <div class="section">
-  <h3>Recent Certificates</h3>
-  ${recentCerts.length > 0 ? recentCerts.map(cert => `
-    <div class="cert-item">
-      <div class="cert-info">
-        <div class="cert-title">${cert.bootcamp} (${cert.type})</div>
-        <div class="cert-meta">
-          Student: ${cert.student_name || 'N/A'} • 
-          Format: ${cert.format} • 
-          Created: ${new Date(cert.created_at).toLocaleDateString()}
+  <h3>My Certificates</h3>
+  ${certificates.length === 0 ? '<div class="empty-state">No certificates yet</div>' : 
+    (() => {
+      // Group certificates by bootcamp
+      const groupedCerts = certificates.reduce((groups, cert) => {
+        const bootcamp = cert.bootcamp || 'Unknown Bootcamp';
+        if (!groups[bootcamp]) groups[bootcamp] = [];
+        groups[bootcamp].push(cert);
+        return groups;
+      }, {});
+      
+      return Object.entries(groupedCerts).map(([bootcamp, certs]) => `
+        <div class="bootcamp-group">
+          <div class="bootcamp-title">${bootcamp} (${certs.length} certificate${certs.length === 1 ? '' : 's'})</div>
+          <table class="cert-table">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Type</th>
+                <th>Format</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${certs.map(cert => `
+                <tr>
+                  <td class="student-name">${cert.student_name || 'Unknown Student'}</td>
+                  <td><span class="cert-type type-${cert.type}">${cert.type === 'completion' ? 'Completion' : 'Participation'}</span></td>
+                  <td>${cert.format === 'portrait' ? 'Portrait' : 'Landscape'}</td>
+                  <td>${new Date(cert.created_at).toLocaleDateString()}</td>
+                  <td class="cert-actions">
+                    <a href="${cert.file_url}" target="_blank">View PDF</a>
+                    <a href="${cert.verify_url}" target="_blank">Verify</a>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
         </div>
-      </div>
-      <div class="cert-actions">
-        <a href="${cert.file_url}" target="_blank">View PDF</a>
-        <a href="${cert.verify_url}" target="_blank">Verify</a>
-      </div>
-    </div>
-  `).join('') : '<div class="empty-state">No certificates yet</div>'}
-  
-  ${certificates.length > 3 ? `<div style="text-align: center; margin-top: 20px;"><a href="/auth/dashboard" class="btn">View All Certificates</a></div>` : ''}
+      `).join('');
+    })()
+  }
 </div>
 
 <div class="section">
