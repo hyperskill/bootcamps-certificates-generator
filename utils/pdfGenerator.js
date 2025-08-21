@@ -6,8 +6,7 @@ const QRCode = require('qrcode');
 
 class CertificateGenerator {
   constructor() {
-    this.qrSize = 120;
-    this.margin = 60; // Updated to 60px as requested
+    this.qrSize = 80;
   }
 
   async generateQRCode(text) {
@@ -41,7 +40,7 @@ class CertificateGenerator {
       console.log('✅ Overlay elements created');
       return {
         overlayImage: qrImageBuffer,
-        uid: uid.slice(0, 12) // Longer UID - 12 characters instead of 8
+        uid: uid.slice(0, 20)
       };
     } catch (error) {
       throw new Error(`Failed to create overlay elements: ${error.message}`);
@@ -119,10 +118,23 @@ class CertificateGenerator {
       // Embed QR code image
       const qrImage = await pdfDoc.embedPng(overlayData.overlayImage);
       
-      // Position QR code: 60px from bottom and 60px from right
+      // Format-dependent positioning
       const qrSize = this.qrSize;
-      const x = width - qrSize - this.margin; // 60px from right
-      const y = this.margin; // 60px from bottom (PDF coordinates start from bottom)
+      let x, y, marginRight, marginBottom;
+      
+      if (format === 'portrait') {
+        // Portrait: smaller margins, positioned more towards center
+        marginRight = 60;
+        marginBottom = 80;
+        x = width - qrSize - marginRight;
+        y = marginBottom;
+      } else {
+        // Landscape: larger margins, positioned in corner
+        marginRight = 100;
+        marginBottom = 60;
+        x = width - qrSize - marginRight;
+        y = marginBottom;
+      }
 
       // Draw QR code (no background rectangle)
       firstPage.drawImage(qrImage, {
@@ -137,19 +149,19 @@ class CertificateGenerator {
       const uidText = `ID: ${overlayData.uid}`;
       
       // Calculate text position to center it under the QR code
-      const textWidth = font.widthOfTextAtSize(uidText, 10);
+      const textWidth = font.widthOfTextAtSize(uidText, 8);
       const textX = x + (qrSize - textWidth) / 2; // Center text under QR code
-      const textY = y - 20; // 20px below QR code
+      const textY = y - 15; // 15px below QR code
 
       firstPage.drawText(uidText, {
         x: textX,
         y: textY,
-        size: 10,
+        size: 8,
         font,
         color: rgb(1, 1, 1), // White color (RGB: 1, 1, 1)
       });
 
-      console.log('✅ Overlay added to PDF');
+      console.log(`✅ Overlay added to PDF (${format} format: QR at ${x},${y})`);
       return pdfDoc;
     } catch (error) {
       throw new Error(`Failed to add overlay to PDF: ${error.message}`);
