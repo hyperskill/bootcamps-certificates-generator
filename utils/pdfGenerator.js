@@ -124,14 +124,14 @@ class CertificateGenerator {
       
       if (format === 'portrait') {
         // Portrait: smaller margins, positioned more towards center
-        marginRight = 60;
-        marginBottom = 80;
+        marginRight = 80;
+        marginBottom = 100;
         x = width - qrSize - marginRight;
         y = marginBottom;
       } else {
         // Landscape: larger margins, positioned in corner
-        marginRight = 100;
-        marginBottom = 60;
+        marginRight = 90;
+        marginBottom = 80;
         x = width - qrSize - marginRight;
         y = marginBottom;
       }
