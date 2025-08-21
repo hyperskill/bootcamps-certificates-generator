@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "nodemon app.js",
     "start": "node app.js",
+    "postinstall": "npx puppeteer browsers install chrome || echo 'Chrome installation skipped - using system chrome'",
     "setup-help": "echo 'Setup Instructions:' && echo '1. Create Supabase project at https://supabase.com' && echo '2. Run scripts/setup-supabase.sql in Supabase SQL Editor' && echo '3. Add Supabase credentials to .env file'"
   },
   "dependencies": {

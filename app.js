@@ -3,6 +3,10 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 
+// Log environment information for debugging
+const { logEnvironmentInfo } = require('./utils/environmentInfo');
+logEnvironmentInfo();
+
 // Import routes
 const generateRoutes = require('./routes/generate');
 const certRoutes = require('./routes/certs');

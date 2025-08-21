@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
-const puppeteer = require('puppeteer');
+const { launchBrowser } = require('../utils/puppeteerConfig');
 const multer = require('multer');
 const { saveCertificate } = require('../utils/supabaseDatabase');
 
@@ -163,7 +163,7 @@ const generateCertificate = async (req, res) => {
   </div>
 </body></html>`;
 
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const browser = await launchBrowser();
     const page = await browser.newPage();
     await page.setViewport({ width: pageWidth, height: pageHeight, deviceScaleFactor: 2 });
     await page.setContent(html, { waitUntil: 'networkidle0' });
