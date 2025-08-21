@@ -76,7 +76,15 @@ const getAdminForm = (_req, res) => {
   </div>
   
   <button type="submit">Generate Certificate with QR Code</button>
-</form>`);
+</form>
+
+<div style="margin-top: 40px; text-align: center; padding-top: 30px; border-top: 2px solid #e9ecef;">
+  <h3 style="margin-bottom: 20px;">Admin Tools</h3>
+  <a href="/admin/users" style="display: inline-block; padding: 12px 24px; background: #fd7e14; color: white; text-decoration: none; border-radius: 6px; margin-right: 15px;">👥 Manage Users</a>
+  <a href="/admin/certificates" style="display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; margin-right: 15px;">📄 All Certificates</a>
+  <a href="/auth/dashboard" style="display: inline-block; padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px;">← Back to Dashboard</a>
+</div>
+`);
 };
 
 const getUserManagement = async (req, res) => {
@@ -190,9 +198,17 @@ async function updateUser(userId, status) {
     }
   } catch (error) {
     alert('Error updating user status');
-  }
-}
-</script>`);
+         }
+     }
+   </script>
+
+   <div style="margin-top: 40px; text-align: center; padding-top: 30px; border-top: 2px solid #e9ecef;">
+     <h3 style="margin-bottom: 20px;">Admin Tools</h3>
+     <a href="/admin" style="display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 6px; margin-right: 15px;">Generate Certificate</a>
+     <a href="/admin/certificates" style="display: inline-block; padding: 12px 24px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; margin-right: 15px;">📄 All Certificates</a>
+     <a href="/auth/dashboard" style="display: inline-block; padding: 12px 24px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px;">← Back to Dashboard</a>
+   </div>
+   `);
   } catch (error) {
     console.error('User management error:', error);
     res.status(500).send('Error loading user management');
@@ -213,8 +229,139 @@ const updateUser = async (req, res) => {
   }
 };
 
+const getAllCertificatesPage = async (req, res) => {
+  try {
+    const { getAllCertificates } = require('../utils/supabaseDatabase');
+    const certificates = await getAllCertificates(1000); // Get more certificates for admin view
+    
+    res.send(`<!doctype html><meta charset="utf-8">
+<title>All Certificates - Admin Panel</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 1400px; margin: 20px auto; padding: 20px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  .back-link { color: #007bff; text-decoration: none; font-weight: bold; }
+  .back-link:hover { text-decoration: underline; }
+  .stats { display: flex; gap: 20px; margin-bottom: 30px; }
+  .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; min-width: 120px; }
+  .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+  .bootcamp-group { margin-bottom: 40px; }
+  .bootcamp-title { color: #007bff; font-size: 20px; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e9ecef; }
+  .cert-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .cert-table th { background: #f8f9fa; padding: 12px 15px; text-align: left; font-weight: 600; color: #495057; border-bottom: 1px solid #dee2e6; }
+  .cert-table td { padding: 12px 15px; border-bottom: 1px solid #f1f3f4; }
+  .cert-table tr:last-child td { border-bottom: none; }
+  .cert-table tr:hover { background: #f8f9fa; }
+  .student-name { font-weight: 600; color: #333; }
+  .cert-type { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+  .type-completion { background: #d4edda; color: #155724; }
+  .type-participation { background: #cce8ff; color: #004085; }
+  .cert-actions a { color: #007bff; text-decoration: none; margin-right: 10px; font-size: 13px; }
+  .cert-actions a:hover { text-decoration: underline; }
+  .created-by { color: #666; font-size: 12px; }
+  .empty-state { text-align: center; color: #666; padding: 40px; background: white; border-radius: 8px; border: 1px solid #dee2e6; }
+</style>
+
+<div class="header">
+  <a href="/auth/dashboard" class="back-link">← Back to Dashboard</a>
+  <div>
+    <h1>All Certificates - Admin Panel</h1>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-number">${certificates.length}</div>
+    <div>Total Certificates</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${certificates.filter(c => c.type === 'completion').length}</div>
+    <div>Completion</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${certificates.filter(c => c.type === 'participation').length}</div>
+    <div>Participation</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${new Set(certificates.map(c => c.bootcamp)).size}</div>
+    <div>Bootcamps</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">${new Set(certificates.map(c => c.user_id)).size}</div>
+    <div>Users</div>
+  </div>
+</div>
+
+${certificates.length === 0 ? '<div class="empty-state">No certificates have been generated yet.</div>' : 
+  (() => {
+    // Group certificates by bootcamp
+    const groupedCerts = certificates.reduce((groups, cert) => {
+      const bootcamp = cert.bootcamp || 'Unknown Bootcamp';
+      if (!groups[bootcamp]) groups[bootcamp] = [];
+      groups[bootcamp].push(cert);
+      return groups;
+    }, {});
+    
+    return Object.entries(groupedCerts).map(([bootcamp, certs]) => `
+      <div class="bootcamp-group">
+        <div class="bootcamp-title">${bootcamp} (${certs.length} certificate${certs.length === 1 ? '' : 's'})</div>
+        <table class="cert-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Type</th>
+              <th>Format</th>
+              <th>Created By</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${certs.map(cert => `
+              <tr>
+                <td class="student-name">${cert.student_name || 'Unknown Student'}</td>
+                <td><span class="cert-type type-${cert.type}">${cert.type === 'completion' ? 'Completion' : 'Participation'}</span></td>
+                <td>${cert.format === 'portrait' ? 'Portrait' : 'Landscape'}</td>
+                <td class="created-by">${cert.profiles?.full_name || cert.profiles?.email || 'Unknown User'}</td>
+                <td>${new Date(cert.created_at).toLocaleDateString()}</td>
+                <td class="cert-actions">
+                  <a href="${cert.file_url}" target="_blank">View PDF</a>
+                  <a href="${cert.verify_url}" target="_blank">Verify</a>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `).join('');
+  })()
+}
+
+<div style="margin-top: 40px; text-align: center;">
+  <a href="/admin" style="display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 6px; margin-right: 15px;">Generate New Certificate</a>
+  <a href="/admin/users" style="display: inline-block; padding: 12px 24px; background: #fd7e14; color: white; text-decoration: none; border-radius: 6px;">👥 Manage Users</a>
+</div>
+`);
+  } catch (error) {
+    console.error('Get all certificates error:', error);
+    res.status(500).send(`
+      <!doctype html><meta charset="utf-8">
+      <title>Error - Admin Panel</title>
+      <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 100px auto; padding: 20px; text-align: center; }
+        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+      </style>
+      <div class="error">
+        <h1>❌ Error Loading Certificates</h1>
+        <p>There was an error loading the certificates. Please try again later.</p>
+        <a href="/auth/dashboard">← Back to Dashboard</a>
+      </div>
+    `);
+  }
+};
+
 module.exports = {
   getAdminForm,
   getUserManagement,
-  updateUser
+  updateUser,
+  getAllCertificatesPage
 };

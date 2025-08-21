@@ -381,6 +381,7 @@ const getProfileHandler = async (req, res) => {
   <a href="/admin" class="btn">Generate New Certificate</a>
   <a href="/auth/dashboard" class="btn btn-secondary">View Dashboard</a>
   ${profile.role === 'admin' ? '<a href="/admin/users" class="btn" style="background: #fd7e14;">👥 Manage Users</a>' : ''}
+  ${profile.role === 'admin' ? '<a href="/admin/certificates" class="btn" style="background: #28a745;">📄 All Certificates</a>' : ''}
 </div>
 `);
   } catch (error) {
