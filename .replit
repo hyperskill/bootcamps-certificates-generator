@@ -1,11 +1,12 @@
-modules = ["nodejs-20"]
+modules = ["nodejs-20", "web"]
 
 [deployment]
 run = ["sh", "-c", "npm start"]
 
-[nix]
-channel = "stable-24_05"
-
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[env]
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
+PUPPETEER_EXECUTABLE_PATH = "/nix/store/$(ls /nix/store/ | grep chromium | head -1)/bin/chromium"

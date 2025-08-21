@@ -1,8 +1,11 @@
 const puppeteer = require('puppeteer');
 
 const createBrowserConfig = () => {
-  // Check if we're running on Replit or similar cloud environment
-  const isReplit = process.env.REPL_ID || process.env.REPLIT_DB_URL;
+  // Enhanced Replit detection
+  const isReplit = process.env.REPL_ID || 
+                   process.env.REPLIT_DB_URL || 
+                   process.env.REPL_SLUG ||
+                   (process.platform === 'linux' && process.env.HOME?.includes('runner'));
   
   if (isReplit) {
     console.log('🚀 Configuring Puppeteer for Replit environment');
@@ -17,9 +20,13 @@ const createBrowserConfig = () => {
         '--no-zygote',
         '--deterministic-fetch',
         '--disable-features=TranslateUI',
-        '--disable-ipc-flooding-protection'
+        '--disable-ipc-flooding-protection',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding'
       ],
-      executablePath: '/nix/store/*-chromium-*/bin/chromium'
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 
+                     '/nix/store/*-chromium-*/bin/chromium'
     };
   }
   

@@ -62,7 +62,7 @@ A modern, full-featured certificate generation system with **Supabase authentica
 
 4. **Start development server**
    ```bash
-   npm run dev
+npm run dev
    ```
 
 5. **Access the application**
