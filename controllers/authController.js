@@ -232,8 +232,7 @@ const getProfileHandler = async (req, res) => {
     if (!profile) {
       const html = templateRenderer.renderAdvanced('verification', {
         title: 'Profile Not Found',
-        isValid: false,
-        error: true
+        notFound: true
       }, ['common', 'verification']);
       
       return res.status(404).send(html);
@@ -309,7 +308,6 @@ const getProfileHandler = async (req, res) => {
     console.error('Profile error:', error);
     const html = templateRenderer.renderAdvanced('verification', {
       title: 'Profile Error',
-      isValid: false,
       error: true
     }, ['common', 'verification']);
     

@@ -40,19 +40,21 @@
       <div class="actions">
         <a href="{{fileUrl}}" target="_blank">📄 View Certificate</a>
       </div>
-    {{else}}
-      {{#if error}}
-        <div class="not-found">
-          <h1>❌ Verification Error</h1>
-          <p>There was an error verifying this certificate. Please try again later.</p>
-        </div>
-      {{else}}
-        <div class="not-found">
-          <h1>❌ Certificate Not Found</h1>
-          <p>The certificate you're looking for could not be found or has been removed.</p>
-          <p>Please check the URL and try again.</p>
-        </div>
-      {{/if}}
+    {{/if}}
+    
+    {{#if error}}
+      <div class="not-found">
+        <h1>❌ Verification Error</h1>
+        <p>There was an error verifying this certificate. Please try again later.</p>
+      </div>
+    {{/if}}
+    
+    {{#if notFound}}
+      <div class="not-found">
+        <h1>❌ Certificate Not Found</h1>
+        <p>The certificate you're looking for could not be found or has been removed.</p>
+        <p>Please check the URL and try again.</p>
+      </div>
     {{/if}}
   </div>
 </body>

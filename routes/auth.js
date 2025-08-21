@@ -42,7 +42,7 @@ router.get('/dashboard', requireAuth, async (req, res) => {
     // Generate certificates content HTML
     let certificatesContent = '';
     if (certificates.length === 0) {
-      certificatesContent = '<div class="empty-state">No certificates yet. <a href="/admin">Generate your first certificate!</a></div>';
+      certificatesContent = '<div class="empty-state">No certificates yet. <a href="/generate">Generate your first certificate!</a></div>';
     } else {
       // Group certificates by bootcamp
       const groupedCerts = certificates.reduce((groups, cert) => {
@@ -98,7 +98,6 @@ router.get('/dashboard', requireAuth, async (req, res) => {
     console.error('Dashboard error:', error);
     const html = templateRenderer.renderAdvanced('verification', {
       title: 'Dashboard Error',
-      isValid: false,
       error: true
     }, ['common', 'verification']);
     

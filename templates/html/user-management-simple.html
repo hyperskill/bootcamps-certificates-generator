@@ -30,7 +30,7 @@
       if (reason === null) return;
       
       try {
-        const response = await fetch('/admin/users/update', {
+        const response = await fetch('/generate/users/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, status, reason })

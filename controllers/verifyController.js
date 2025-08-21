@@ -9,7 +9,7 @@ const verifyCertificate = async (req, res) => {
     if (!rec) {
       const html = templateRenderer.renderAdvanced('verification', {
         title: 'Certificate Not Found',
-        isValid: false
+        notFound: true
       }, ['common', 'verification']);
       
       return res.status(404).send(html);
@@ -31,7 +31,6 @@ const verifyCertificate = async (req, res) => {
     console.error('Verification error:', error);
     const html = templateRenderer.renderAdvanced('verification', {
       title: 'Verification Error',
-      isValid: false,
       error: true
     }, ['common', 'verification']);
     

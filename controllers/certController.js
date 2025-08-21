@@ -233,7 +233,7 @@ const generateCertificate = async (req, res) => {
           <a href="${record.verify_url}" target="_blank">🔍 Test Verification</a>
         </div>
         <div class="back">
-          <a href="/admin">← Upload Another Certificate</a>
+          <a href="/generate">← Upload Another Certificate</a>
         </div>
       `);
     }

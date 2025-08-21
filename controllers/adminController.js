@@ -20,11 +20,11 @@ const getUserManagement = async (req, res) => {
     // Generate filter tabs HTML
     const filterTabsHTML = `
       <div class="filter-tabs">
-        <a href="/admin/users" class="filter-tab ${!status ? 'active' : ''}">All Users (${users.length})</a>
-        <a href="/admin/users?status=pending" class="filter-tab ${status === 'pending' ? 'active' : ''}">Pending (${users.filter(u => u.status === 'pending').length})</a>
-        <a href="/admin/users?status=approved" class="filter-tab ${status === 'approved' ? 'active' : ''}">Approved (${users.filter(u => u.status === 'approved').length})</a>
-        <a href="/admin/users?status=rejected" class="filter-tab ${status === 'rejected' ? 'active' : ''}">Rejected (${users.filter(u => u.status === 'rejected').length})</a>
-        <a href="/admin/users?status=suspended" class="filter-tab ${status === 'suspended' ? 'active' : ''}">Suspended (${users.filter(u => u.status === 'suspended').length})</a>
+        <a href="/generate/users" class="filter-tab ${!status ? 'active' : ''}">All Users (${users.length})</a>
+        <a href="/generate/users?status=pending" class="filter-tab ${status === 'pending' ? 'active' : ''}">Pending (${users.filter(u => u.status === 'pending').length})</a>
+        <a href="/generate/users?status=approved" class="filter-tab ${status === 'approved' ? 'active' : ''}">Approved (${users.filter(u => u.status === 'approved').length})</a>
+        <a href="/generate/users?status=rejected" class="filter-tab ${status === 'rejected' ? 'active' : ''}">Rejected (${users.filter(u => u.status === 'rejected').length})</a>
+        <a href="/generate/users?status=suspended" class="filter-tab ${status === 'suspended' ? 'active' : ''}">Suspended (${users.filter(u => u.status === 'suspended').length})</a>
       </div>
     `;
     
@@ -91,7 +91,6 @@ const getUserManagement = async (req, res) => {
     console.error('User management error:', error);
     const html = templateRenderer.renderAdvanced('verification', {
       title: 'Error - Admin Panel',
-      isValid: false,
       error: true
     }, ['common', 'verification']);
     
@@ -189,7 +188,6 @@ const getAllCertificatesPage = async (req, res) => {
     console.error('Get all certificates error:', error);
     const html = templateRenderer.renderAdvanced('verification', {
       title: 'Error - Admin Panel',
-      isValid: false,
       error: true
     }, ['common', 'verification']);
     

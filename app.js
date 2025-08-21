@@ -4,7 +4,7 @@ const path = require('path');
 const session = require('express-session');
 
 // Import routes
-const adminRoutes = require('./routes/admin');
+const generateRoutes = require('./routes/generate');
 const certRoutes = require('./routes/certs');
 const verifyRoutes = require('./routes/verify');
 const authRoutes = require('./routes/auth');
@@ -37,7 +37,7 @@ app.use(express.static(path.join(__dirname, process.env.PUBLIC_DIR || 'public'))
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/admin', optionalAuth, adminRoutes); // Optional auth - allows both authenticated and anonymous users
+app.use('/generate', generateRoutes); // Authentication handled in individual routes
 app.use('/certs', optionalAuth, certRoutes);  // Optional auth - allows both authenticated and anonymous users
 app.use('/verify', verifyRoutes); // Keep verify public
 
@@ -62,7 +62,7 @@ app.get('/health', async (req, res) => {
         dashboard: '/auth/dashboard',
         login: '/auth/login',
         signup: '/auth/signup',
-        admin: '/admin',
+        generate: '/generate',
         verify_example: '/verify/[certificate-uid]'
       }
     });
@@ -79,6 +79,6 @@ app.listen(PORT, () => {
   console.log(`🚀 Certificate Generator running on http://localhost:${PORT}`);
   console.log(`📊 Dashboard: http://localhost:${PORT}/auth/dashboard`);
   console.log(`🔐 Login: http://localhost:${PORT}/auth/login`);
-  console.log(`📋 Admin: http://localhost:${PORT}/admin`);
+  console.log(`🎓 Generate: http://localhost:${PORT}/generate`);
   console.log(`💾 Health: http://localhost:${PORT}/health`);
 });

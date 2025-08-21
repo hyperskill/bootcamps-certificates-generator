@@ -166,7 +166,7 @@ class TemplateRenderer {
     if (!certificates || certificates.length === 0) {
       return {
         isEmpty: true,
-        emptyMessage: "No certificates yet. <a href='/admin'>Generate your first certificate!</a>"
+        emptyMessage: "No certificates yet. <a href='/generate'>Generate your first certificate!</a>"
       };
     }
 
