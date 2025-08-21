@@ -7,7 +7,7 @@ const QRCode = require('qrcode');
 class CertificateGenerator {
   constructor() {
     this.qrSize = 120;
-    this.margin = 40;
+    this.margin = 60; // Updated to 60px as requested
   }
 
   async generateQRCode(text) {
@@ -32,42 +32,16 @@ class CertificateGenerator {
 
   async createOverlayElements(qrCodeBuffer, uid, format = 'landscape') {
     try {
-      // Resize QR code to desired size
+      // Just resize the QR code - no white background needed
       const qrImageBuffer = await sharp(qrCodeBuffer)
         .resize(this.qrSize, this.qrSize)
         .png()
         .toBuffer();
 
-      // Create a white background with QR code using Sharp
-      const overlayWidth = 200;
-      const overlayHeight = 120;
-      
-      // Create white background
-      const background = await sharp({
-        create: {
-          width: overlayWidth,
-          height: overlayHeight,
-          channels: 4,
-          background: { r: 255, g: 255, b: 255, alpha: 0.9 }
-        }
-      })
-      .png()
-      .toBuffer();
-
-      // Composite QR code onto background
-      const overlayWithQR = await sharp(background)
-        .composite([{
-          input: qrImageBuffer,
-          top: 10,
-          left: 10
-        }])
-        .png()
-        .toBuffer();
-
       console.log('✅ Overlay elements created');
       return {
-        overlayImage: overlayWithQR,
-        uid: uid.slice(0, 8) // Short UID for display
+        overlayImage: qrImageBuffer,
+        uid: uid.slice(0, 12) // Longer UID - 12 characters instead of 8
       };
     } catch (error) {
       throw new Error(`Failed to create overlay elements: ${error.message}`);
@@ -142,48 +116,37 @@ class CertificateGenerator {
       const firstPage = pages[0];
       const { width, height } = firstPage.getSize();
 
-      // Embed overlay image
-      const overlayImage = await pdfDoc.embedPng(overlayData.overlayImage);
+      // Embed QR code image
+      const qrImage = await pdfDoc.embedPng(overlayData.overlayImage);
       
-      // Position overlay (top-right corner with margin)
-      const overlayWidth = 180;
-      const overlayHeight = 110;
-      
-      let x, y;
-      if (format === 'portrait') {
-        x = width - overlayWidth - this.margin;
-        y = height - overlayHeight - this.margin;
-      } else {
-        x = width - overlayWidth - this.margin;
-        y = height - overlayHeight - this.margin;
-      }
+      // Position QR code: 60px from bottom and 60px from right
+      const qrSize = this.qrSize;
+      const x = width - qrSize - this.margin; // 60px from right
+      const y = this.margin; // 60px from bottom (PDF coordinates start from bottom)
 
-      // Draw semi-transparent white background for better visibility
-      firstPage.drawRectangle({
-        x: x - 10,
-        y: y - 10,
-        width: overlayWidth + 20,
-        height: overlayHeight + 20,
-        color: rgb(1, 1, 1),
-        opacity: 0.9,
-      });
-
-      // Draw overlay image (QR code)
-      firstPage.drawImage(overlayImage, {
+      // Draw QR code (no background rectangle)
+      firstPage.drawImage(qrImage, {
         x,
         y,
-        width: overlayWidth,
-        height: overlayHeight,
+        width: qrSize,
+        height: qrSize,
       });
 
-      // Add UID text below the QR code
+      // Add UID text below the QR code with white color
       const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      firstPage.drawText(`ID: ${overlayData.uid}`, {
-        x: x,
-        y: y - 25,
-        size: 12,
+      const uidText = `ID: ${overlayData.uid}`;
+      
+      // Calculate text position to center it under the QR code
+      const textWidth = font.widthOfTextAtSize(uidText, 10);
+      const textX = x + (qrSize - textWidth) / 2; // Center text under QR code
+      const textY = y - 20; // 20px below QR code
+
+      firstPage.drawText(uidText, {
+        x: textX,
+        y: textY,
+        size: 10,
         font,
-        color: rgb(0, 0, 0),
+        color: rgb(1, 1, 1), // White color (RGB: 1, 1, 1)
       });
 
       console.log('✅ Overlay added to PDF');
