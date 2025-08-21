@@ -44,10 +44,6 @@ const verifyCertificate = async (req, res) => {
     <span class="value">${escapeHtml(rec.bootcamp || 'N/A')}</span>
   </div>
   <div class="detail-row">
-    <span class="label">Format:</span> 
-    <span class="value">${escapeHtml(rec.format || 'N/A')}</span>
-  </div>
-  <div class="detail-row">
     <span class="label">Type:</span> 
     <span class="value">${escapeHtml(rec.type || 'N/A')}</span>
   </div>
@@ -56,16 +52,12 @@ const verifyCertificate = async (req, res) => {
     <span class="value">${escapeHtml(rec.student_name || 'N/A')}</span>
   </div>
   <div class="detail-row">
-    <span class="label">Original Filename:</span> 
-    <span class="value">${escapeHtml(rec.original_filename || 'N/A')}</span>
-  </div>
-  <div class="detail-row">
     <span class="label">Created:</span> 
     <span class="value">${rec.created_at ? new Date(rec.created_at).toLocaleString() : 'N/A'}</span>
   </div>
   <div class="detail-row">
     <span class="label">Certificate ID:</span> 
-    <span class="value uid">${rec.uid}</span>
+    <span class="value uid"><a href="${rec.file_url}" target="_blank" style="color: #007bff; text-decoration: none; font-family: monospace;">${rec.uid}</a></span>
   </div>
 </div>
 <div class="actions">
