@@ -1,82 +1,41 @@
 const { getCertificateByUid } = require('../utils/supabaseDatabase');
 const { escapeHtml } = require('../utils/helpers');
+const templateRenderer = require('../utils/templateRenderer');
 
 const verifyCertificate = async (req, res) => {
   try {
     const rec = await getCertificateByUid(req.params.uid);
   
     if (!rec) {
-      return res.status(404).send(`
-        <!doctype html><meta charset="utf-8">
-        <title>Certificate Not Found</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
-          .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
-        </style>
-        <div class="error">
-          <h1>❌ Certificate Not Found</h1>
-          <p>The certificate with this ID could not be found or may have been removed.</p>
-        </div>
-      `);
+      const html = templateRenderer.renderAdvanced('verification', {
+        title: 'Certificate Not Found',
+        isValid: false
+      }, ['common', 'verification']);
+      
+      return res.status(404).send(html);
     }
-  
-  res.send(`<!doctype html><meta charset="utf-8">
-<title>Certificate Verification</title>
-<style>
-  body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-  .verified { background: #d4edda; color: #155724; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
-  .details { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-  .detail-row { margin-bottom: 10px; }
-  .label { font-weight: bold; color: #495057; }
-  .value { color: #212529; }
-  .actions { text-align: center; }
-  .actions a { display: inline-block; margin: 10px; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
-  .actions a:hover { background: #0056b3; }
-  .uid { font-family: monospace; background: #e9ecef; padding: 5px; border-radius: 3px; }
-</style>
-<div class="verified">
-  <h1>✅ Certificate Verified</h1>
-  <p>This certificate is authentic and has been verified.</p>
-</div>
-<div class="details">
-  <div class="detail-row">
-    <span class="label">Bootcamp:</span> 
-    <span class="value">${escapeHtml(rec.bootcamp || 'N/A')}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Type:</span> 
-    <span class="value">${escapeHtml(rec.type || 'N/A')}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Student Name:</span> 
-    <span class="value">${escapeHtml(rec.student_name || 'N/A')}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Created:</span> 
-    <span class="value">${rec.created_at ? new Date(rec.created_at).toLocaleString() : 'N/A'}</span>
-  </div>
-  <div class="detail-row">
-    <span class="label">Certificate ID:</span> 
-    <span class="value uid"><a href="${rec.file_url}" target="_blank" style="color: #007bff; text-decoration: none; font-family: monospace;">${rec.uid}</a></span>
-  </div>
-</div>
-<div class="actions">
-  <a href="${rec.file_url}" target="_blank">📄 View Certificate</a>
-</div>`);
+
+    const html = templateRenderer.renderAdvanced('verification', {
+      title: 'Certificate Verification',
+      isValid: true,
+      bootcamp: escapeHtml(rec.bootcamp || 'N/A'),
+      type: escapeHtml(rec.type || 'N/A'),
+      studentName: escapeHtml(rec.student_name || 'N/A'),
+      createdAt: rec.created_at ? new Date(rec.created_at).toLocaleString() : 'N/A',
+      uid: rec.uid,
+      fileUrl: rec.file_url
+    }, ['common', 'verification']);
+    
+    res.send(html);
   } catch (error) {
     console.error('Verification error:', error);
-    res.status(500).send(`
-      <!doctype html><meta charset="utf-8">
-      <title>Verification Error</title>
-      <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
-        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
-      </style>
-      <div class="error">
-        <h1>❌ Verification Error</h1>
-        <p>There was an error verifying this certificate. Please try again later.</p>
-      </div>
-    `);
+    const html = templateRenderer.renderAdvanced('verification', {
+      title: 'Verification Error',
+      isValid: false,
+      error: true
+    }, ['common', 'verification']);
+    
+    res.status(500).send(html);
   }
 };
 

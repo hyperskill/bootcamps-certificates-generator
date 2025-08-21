@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <style>{{CSS}}</style>
+</head>
+<body>
+  <div class="verification-container">
+    {{#if isValid}}
+      <div class="verified">
+        <h1>✅ Certificate Verified</h1>
+        <p>This certificate is authentic and has been verified.</p>
+      </div>
+      <div class="details">
+        <div class="detail-row">
+          <span class="label">Bootcamp:</span>
+          <span class="value">{{bootcamp}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Type:</span>
+          <span class="value">{{type}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Student Name:</span>
+          <span class="value">{{studentName}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Created:</span>
+          <span class="value">{{createdAt}}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Certificate ID:</span>
+          <span class="value uid">
+            <a href="{{fileUrl}}" target="_blank">{{uid}}</a>
+          </span>
+        </div>
+      </div>
+      <div class="actions">
+        <a href="{{fileUrl}}" target="_blank">📄 View Certificate</a>
+      </div>
+    {{else}}
+      {{#if error}}
+        <div class="not-found">
+          <h1>❌ Verification Error</h1>
+          <p>There was an error verifying this certificate. Please try again later.</p>
+        </div>
+      {{else}}
+        <div class="not-found">
+          <h1>❌ Certificate Not Found</h1>
+          <p>The certificate you're looking for could not be found or has been removed.</p>
+          <p>Please check the URL and try again.</p>
+        </div>
+      {{/if}}
+    {{/if}}
+  </div>
+</body>
+</html>

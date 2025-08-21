@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <style>{{CSS}}</style>
+</head>
+<body>
+  <div class="container-wide">
+    <div class="header">
+      <h1>All Certificates - Admin Panel</h1>
+      <div>
+        <a href="/auth/dashboard" class="btn btn-secondary">Dashboard</a>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">{{totalCertificates}}</div>
+        <div class="stat-label">Total Certificates</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{completionCount}}</div>
+        <div class="stat-label">Completion</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{participationCount}}</div>
+        <div class="stat-label">Participation</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{uniqueBootcamps}}</div>
+        <div class="stat-label">Unique Bootcamps</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">{{uniqueUsers}}</div>
+        <div class="stat-label">Unique Users</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>All Certificates by Bootcamp</h3>
+      {{>certificate-table}}
+    </div>
+  </div>
+</body>
+</html>

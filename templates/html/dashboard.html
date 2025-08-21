@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <style>{{CSS}}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Certificate Dashboard</h1>
+      <div class="user-info">
+        <strong>Welcome, {{userEmail}}</strong>
+        <a href="/auth/logout" style="margin-left: 15px; color: #dc3545;">Logout</a>
+      </div>
+    </div>
+    
+    {{alerts}}
+
+    <div class="action-buttons">
+      <a href="/admin" class="btn">Generate New Certificate</a>
+      <a href="/auth/profile" class="btn btn-secondary">View Profile</a>
+      {{#if isAdmin}}
+        <a href="/admin/users" class="btn btn-warning">👥 Manage Users</a>
+        <a href="/admin/certificates" class="btn btn-success">📄 All Certificates</a>
+      {{/if}}
+    </div>
+
+    <h2>Your Certificates ({{certificateCount}})</h2>
+
+    {{certificatesContent}}
+  </div>
+</body>
+</html>

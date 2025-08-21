@@ -1,0 +1,197 @@
+/* Table styles for certificates and user management */
+
+.bootcamp-group { 
+  margin-bottom: 40px; 
+}
+
+.bootcamp-title { 
+  color: #007bff; 
+  font-size: 20px; 
+  font-weight: bold; 
+  margin-bottom: 15px; 
+  padding-bottom: 8px; 
+  border-bottom: 2px solid #e9ecef; 
+}
+
+.cert-table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  background: white; 
+  border-radius: 8px; 
+  overflow: hidden; 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+}
+
+.cert-table th { 
+  background: #f8f9fa; 
+  padding: 12px 15px; 
+  text-align: left; 
+  font-weight: 600; 
+  color: #495057; 
+  border-bottom: 1px solid #dee2e6; 
+}
+
+.cert-table td { 
+  padding: 12px 15px; 
+  border-bottom: 1px solid #f1f3f4; 
+}
+
+.cert-table tr:last-child td { 
+  border-bottom: none; 
+}
+
+.cert-table tr:hover { 
+  background: #f8f9fa; 
+}
+
+.student-name { 
+  font-weight: 600; 
+  color: #333; 
+}
+
+.cert-type { 
+  padding: 4px 8px; 
+  border-radius: 4px; 
+  font-size: 12px; 
+  font-weight: bold; 
+}
+
+.type-completion { 
+  background: #d4edda; 
+  color: #155724; 
+}
+
+.type-participation { 
+  background: #cce8ff; 
+  color: #004085; 
+}
+
+.cert-actions a { 
+  color: #007bff; 
+  text-decoration: none; 
+  margin-right: 10px; 
+  font-size: 13px; 
+}
+
+.cert-actions a:hover { 
+  text-decoration: underline; 
+}
+
+.created-by { 
+  color: #666; 
+  font-size: 12px; 
+}
+
+/* User table specific styles */
+.user-table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.user-table th, 
+.user-table td { 
+  padding: 12px; 
+  text-align: left; 
+  border-bottom: 1px solid #f1f3f4; 
+}
+
+.user-table th { 
+  background: #f8f9fa; 
+  font-weight: 600;
+  color: #495057;
+}
+
+.user-table tr:hover { 
+  background: #f8f9fa; 
+}
+
+.status-badge { 
+  padding: 4px 8px; 
+  border-radius: 4px; 
+  font-size: 12px; 
+  font-weight: bold; 
+  text-transform: uppercase;
+}
+
+.status-pending { 
+  background: #fff3cd; 
+  color: #856404; 
+}
+
+.status-approved { 
+  background: #d4edda; 
+  color: #155724; 
+}
+
+.status-rejected { 
+  background: #f8d7da; 
+  color: #721c24; 
+}
+
+.status-suspended { 
+  background: #e2e3e5; 
+  color: #495057; 
+}
+
+.action-btn { 
+  padding: 6px 12px; 
+  margin: 2px; 
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  font-size: 12px; 
+  font-weight: bold;
+}
+
+.btn-approve { 
+  background: #28a745; 
+  color: white; 
+}
+
+.btn-reject { 
+  background: #dc3545; 
+  color: white; 
+}
+
+.btn-suspend { 
+  background: #6c757d; 
+  color: white; 
+}
+
+.action-btn:hover {
+  opacity: 0.8;
+}
+
+/* Filter tabs */
+.filter-tabs {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.filter-tab {
+  display: inline-block;
+  padding: 12px 20px;
+  color: #495057;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  margin-right: 10px;
+}
+
+.filter-tab:hover {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.filter-tab.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  font-weight: bold;
+}
+
+.user-actions {
+  white-space: nowrap;
+}

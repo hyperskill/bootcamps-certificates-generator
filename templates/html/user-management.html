@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <style>{{CSS}}</style>
+</head>
+<body>
+  <div class="container-wide">
+    <div class="header">
+      <h1>User Management - Admin Panel</h1>
+      <div>
+        <a href="/auth/dashboard" class="btn btn-secondary">Dashboard</a>
+      </div>
+    </div>
+
+    <div class="user-info">
+      <p><strong>Total Users:</strong> {{totalUsers}} | <strong>Pending Approval:</strong> {{pendingCount}}</p>
+    </div>
+
+    <div class="filter-tabs">
+      <a href="/admin/users" class="filter-tab {{#if showAll}}active{{/if}}">All Users ({{totalUsers}})</a>
+      <a href="/admin/users?status=pending" class="filter-tab {{#if showPending}}active{{/if}}">Pending ({{pendingCount}})</a>
+      <a href="/admin/users?status=approved" class="filter-tab {{#if showApproved}}active{{/if}}">Approved</a>
+      <a href="/admin/users?status=rejected" class="filter-tab {{#if showRejected}}active{{/if}}">Rejected</a>
+      <a href="/admin/users?status=suspended" class="filter-tab {{#if showSuspended}}active{{/if}}">Suspended</a>
+    </div>
+
+    {{#if isEmpty}}
+      <div class="empty-state">
+        <p>{{emptyMessage}}</p>
+      </div>
+    {{else}}
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Name/Email</th>
+            <th>Status</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each users}}
+            <tr>
+              <td>
+                <strong>{{this.fullName}}</strong><br>
+                <small>{{this.email}}</small>
+              </td>
+              <td>
+                <span class="status-badge status-{{this.status}}">{{this.statusLabel}}</span>
+              </td>
+              <td>{{this.roleLabel}}</td>
+              <td>{{this.joinedDate}}</td>
+              <td>{{this.notes}}</td>
+              <td class="user-actions">
+                {{#if this.showApprove}}
+                  <button class="action-btn btn-approve" onclick="updateUser('{{this.id}}', 'approved')">Approve</button>
+                {{/if}}
+                {{#if this.showReject}}
+                  <button class="action-btn btn-reject" onclick="updateUser('{{this.id}}', 'rejected')">Reject</button>
+                {{/if}}
+                {{#if this.showSuspend}}
+                  <button class="action-btn btn-suspend" onclick="updateUser('{{this.id}}', 'suspended')">Suspend</button>
+                {{/if}}
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{/if}}
+  </div>
+
+  <script>
+    async function updateUser(userId, status) {
+      const reason = prompt(`Please provide a reason for ${status === 'rejected' ? 'rejecting' : status === 'suspended' ? 'suspending' : 'approving'} this user:`);
+      if (reason === null) return;
+      
+      try {
+        const response = await fetch('/admin/users/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, status, reason })
+        });
+        
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to update user status');
+        }
+      } catch (error) {
+        alert('Error updating user: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

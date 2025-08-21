@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <style>{{CSS}}</style>
+</head>
+<body>
+  <div class="admin-form-container">
+    <div class="alert info">
+      <h2>Certificate Generator with QR Code</h2>
+      <p>Fill out the details below and upload your certificate to add a verification QR code.</p>
+    </div>
+
+    <form method="POST" action="/certs" enctype="multipart/form-data">
+      <div class="form-section">
+        <h3>Certificate Details</h3>
+        
+        <div class="form-group">
+          <label>Bootcamp Name</label>
+          <input type="text" name="bootcamp" placeholder="Bootcamp name" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Student Name</label>
+          <input type="text" name="studentName" placeholder="Student's full name" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Certificate Format</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="portrait" name="format" value="portrait" required>
+              <label for="portrait">Portrait</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="landscape" name="format" value="landscape" required>
+              <label for="landscape">Landscape</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Certificate Type</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" id="completion" name="type" value="completion" required>
+              <label for="completion">Completion</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" id="participation" name="type" value="participation" required>
+              <label for="participation">Participation</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Upload Certificate</h3>
+        
+        <div class="form-group">
+          <label>Certificate File (PNG, JPG, PDF)</label>
+          <input type="file" name="certificate" accept=".png,.jpg,.jpeg,.pdf" required>
+        </div>
+      </div>
+      
+      <button type="submit">Generate Certificate with QR Code</button>
+    </form>
+
+    <div class="admin-tools">
+      <h3>Admin Tools</h3>
+      <a href="/admin/users" class="btn btn-warning">👥 Manage Users</a>
+      <a href="/admin/certificates" class="btn btn-success">📄 All Certificates</a>
+      <a href="/auth/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <style>{{CSS}}</style>
+</head>
+<body>
+  <div class="container-wide">
+    <div class="header">
+      <h1>User Management - Admin Panel</h1>
+      <div>
+        <a href="/auth/dashboard" class="btn btn-secondary">Dashboard</a>
+      </div>
+    </div>
+
+    <div class="user-info">
+      <p><strong>Total Users:</strong> {{totalUsers}} | <strong>Pending Approval:</strong> {{pendingCount}}</p>
+    </div>
+
+    {{filterTabs}}
+
+    {{usersTable}}
+  </div>
+
+  <script>
+    async function updateUser(userId, status) {
+      const reason = prompt(`Please provide a reason for ${status === 'rejected' ? 'rejecting' : status === 'suspended' ? 'suspending' : 'approving'} this user:`);
+      if (reason === null) return;
+      
+      try {
+        const response = await fetch('/admin/users/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, status, reason })
+        });
+        
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to update user status');
+        }
+      } catch (error) {
+        alert('Error updating user: ' + error.message);
+      }
+    }
+  </script>
+</body>
+</html>

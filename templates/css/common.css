@@ -1,0 +1,183 @@
+/* Common styles used across the application */
+body { 
+  font-family: Arial, sans-serif; 
+  margin: 0; 
+  padding: 0; 
+  background-color: #f5f5f5; 
+}
+
+.container { 
+  max-width: 1200px; 
+  margin: 0 auto; 
+  padding: 20px; 
+}
+
+.container-narrow { 
+  max-width: 600px; 
+  margin: 50px auto; 
+  padding: 20px; 
+}
+
+.container-wide { 
+  max-width: 1400px; 
+  margin: 20px auto; 
+  padding: 20px; 
+}
+
+/* Header Styles */
+.header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 30px; 
+}
+
+.back-link { 
+  color: #007bff; 
+  text-decoration: none; 
+  font-weight: bold; 
+}
+
+.back-link:hover { 
+  text-decoration: underline; 
+}
+
+/* Button Styles */
+.btn { 
+  display: inline-block; 
+  padding: 12px 24px; 
+  background: #007bff; 
+  color: white; 
+  text-decoration: none; 
+  border-radius: 6px; 
+  border: none; 
+  cursor: pointer; 
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.btn:hover { 
+  background: #0056b3; 
+}
+
+.btn-secondary { 
+  background: #6c757d; 
+}
+
+.btn-secondary:hover { 
+  background: #545b62; 
+}
+
+.btn-success { 
+  background: #28a745; 
+}
+
+.btn-success:hover { 
+  background: #218838; 
+}
+
+.btn-warning { 
+  background: #fd7e14; 
+}
+
+.btn-warning:hover { 
+  background: #e66100; 
+}
+
+.btn-danger { 
+  background: #dc3545; 
+}
+
+.btn-danger:hover { 
+  background: #c82333; 
+}
+
+/* Form Styles */
+.form-group { 
+  margin-bottom: 20px; 
+}
+
+label { 
+  display: block; 
+  margin-bottom: 5px; 
+  font-weight: bold; 
+}
+
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="file"] { 
+  width: 100%; 
+  padding: 12px; 
+  border: 1px solid #ddd; 
+  border-radius: 6px; 
+  box-sizing: border-box;
+}
+
+button[type="submit"] { 
+  background: #007bff; 
+  color: white; 
+  padding: 14px 28px; 
+  border: none; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  width: 100%; 
+  font-size: 16px; 
+  font-weight: bold; 
+}
+
+button[type="submit"]:hover { 
+  background: #0056b3; 
+}
+
+/* Alert Styles */
+.alert { 
+  padding: 10px; 
+  border-radius: 4px; 
+  margin-bottom: 20px; 
+}
+
+.alert.success { 
+  background: #d4edda; 
+  color: #155724; 
+}
+
+.alert.error { 
+  background: #f8d7da; 
+  color: #721c24; 
+}
+
+.alert.warning { 
+  background: #fff3cd; 
+  color: #856404; 
+}
+
+.alert.info { 
+  background: #e7f3ff; 
+  border-left: 4px solid #007bff; 
+}
+
+/* Empty State */
+.empty-state { 
+  text-align: center; 
+  color: #666; 
+  padding: 40px; 
+  background: white; 
+  border-radius: 8px; 
+  border: 1px solid #dee2e6; 
+}
+
+/* Links */
+.links { 
+  text-align: center; 
+  margin-top: 20px; 
+}
+
+.links a { 
+  color: #007bff; 
+  text-decoration: none; 
+}
+
+.links a:hover { 
+  text-decoration: underline; 
+}
