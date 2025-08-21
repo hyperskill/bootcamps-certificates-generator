@@ -9,4 +9,3 @@ externalPort = 80
 
 [env]
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "true"
-PUPPETEER_EXECUTABLE_PATH = "/nix/store/$(ls /nix/store/ | grep chromium | head -1)/bin/chromium"
