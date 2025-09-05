@@ -8,19 +8,19 @@
     "setup-help": "echo 'Setup Instructions:' && echo '1. Create Supabase project at https://supabase.com' && echo '2. Run scripts/setup-supabase.sql in Supabase SQL Editor' && echo '3. Add Supabase credentials to .env file'"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.55.0",
+    "@supabase/supabase-js": "^2.57.0",
     "bcryptjs": "^3.0.2",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
-    "qrcode": "^1.5.3",
-    "uuid": "^9.0.1",
+    "qrcode": "^1.5.4",
+    "uuid": "^11.1.0",
     "pdf-lib": "^1.17.1",
-    "sharp": "^0.33.0"
+    "sharp": "^0.34.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.1.10"
   }
 }
