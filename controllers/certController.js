@@ -3,6 +3,7 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const { saveCertificate } = require('../utils/supabaseDatabase');
+const { supabaseAdmin } = require('../utils/supabase');
 const CertificateGenerator = require('../utils/pdfGenerator');
 
 const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
@@ -87,25 +88,14 @@ const generateCertificate = async (req, res) => {
     console.log(`🎯 Generating certificate for ${student_name} - ${bootcamp}`);
     console.log(`🔗 Verification URL: ${verifyUrl}`);
 
-    // Create folder structure based on bootcamp and type
+    // Determine remote storage folder structure based on bootcamp and type
     const bootcampFolder = toSnakeCase(bootcamp);
     const typeFolder = type === 'completion' ? 'completed' : 'participated';
-    const relativeFolderPath = path.join(process.env.CERTS_DIR || 'public/certs', bootcampFolder, typeFolder);
-    const absoluteFolderPath = path.join(__dirname, '..', relativeFolderPath);
-    
-    // Create directories if they don't exist
-    fs.mkdirSync(absoluteFolderPath, { recursive: true });
-    console.log(`📁 Created directory: ${absoluteFolderPath}`);
 
-    // Generate certificate using new PDF generator
+    // Generate certificate using PDF generator (in-memory)
     console.log('🎨 Initializing PDF generator...');
     const generator = new CertificateGenerator();
     const pdfBuffer = await generator.generateCertificate(req.file, uid, verifyUrl, format);
-
-    // Save PDF file
-    const outPath = path.join(absoluteFolderPath, `${uid}.pdf`);
-    fs.writeFileSync(outPath, pdfBuffer);
-    console.log(`💾 Certificate saved to: ${outPath}`);
 
     // Clean up uploaded file
     try {
@@ -115,8 +105,38 @@ const generateCertificate = async (req, res) => {
       console.warn('⚠️ Could not delete temporary file:', cleanupError.message);
     }
 
+    // Prepare pathing
+    const storagePath = path.join(bootcampFolder, typeFolder, `${uid}.pdf`).replace(/\\/g, '/');
+
+    // Try uploading to Supabase Storage
+    const bucket = process.env.SUPABASE_CERTS_BUCKET || 'certificates';
+    let publicFileUrl = null;
+    try {
+      console.log(`☁️ Uploading certificate to Supabase Storage bucket '${bucket}' at '${storagePath}'...`);
+      await supabaseAdmin.storage
+        .from(bucket)
+        .upload(storagePath, pdfBuffer, { contentType: 'application/pdf', upsert: true });
+
+      const { data: pub } = await supabaseAdmin.storage
+        .from(bucket)
+        .getPublicUrl(storagePath);
+
+      if (pub && pub.publicUrl) {
+        publicFileUrl = pub.publicUrl;
+        console.log(`🌐 Public URL obtained: ${publicFileUrl}`);
+      } else {
+        console.warn('⚠️ Could not obtain public URL from Supabase Storage response');
+      }
+    } catch (uploadError) {
+      console.error('❌ Supabase Storage upload failed:', uploadError);
+    }
+
+    // If upload failed, stop here (no local fallback)
+    if (!publicFileUrl) {
+      return res.status(502).json({ error: 'Failed to upload certificate to storage' });
+    }
+
     // Save to Supabase database
-    const relativeFilePath = path.join(bootcampFolder, typeFolder, `${uid}.pdf`).replace(/\\/g, '/');
     const record = { 
       uid, 
       user_id: req.user.id,
@@ -125,15 +145,15 @@ const generateCertificate = async (req, res) => {
       type,
       student_name, 
       original_filename: req.file.originalname,
-      file_url: `/certs/${relativeFilePath}`, 
+      file_url: publicFileUrl,
       verify_url: `/verify/${uid}` 
     };
 
     try {
       const savedRecord = await saveCertificate(record);
-      console.log('Certificate saved to Supabase:', savedRecord.uid);
+      console.log('🗄️ Certificate record saved to Supabase DB:', savedRecord.uid);
     } catch (dbError) {
-      console.error('Database save failed:', dbError);
+      console.error('❌ Database save failed:', dbError);
       // Continue with response even if DB save fails
     }
 
@@ -142,7 +162,7 @@ const generateCertificate = async (req, res) => {
       res.json({ 
         ok: true, 
         ...record, 
-        absolute_pdf: `${BASE_URL}${record.file_url}`, 
+        absolute_pdf: record.file_url,
         absolute_verify: `${BASE_URL}${record.verify_url}` 
       });
     } else {
@@ -162,7 +182,7 @@ const generateCertificate = async (req, res) => {
           <p>Your ${format} ${type} certificate for <strong>${bootcamp}</strong> has been processed and QR code added.</p>
           <p><strong>Student:</strong> ${student_name}</p>
           <p><strong>Certificate ID:</strong> ${uid}</p>
-          <p><strong>Stored in:</strong> ${bootcampFolder}/${typeFolder}/</p>
+          <p><strong>Storage:</strong> Supabase Storage</p>
         </div>
         <div class="links">
           <a href="${record.file_url}" target="_blank">📄 Open Certificate PDF</a>
